@@ -132,7 +132,7 @@ else
             return false;
         }
 
-        if (_configObj.ListaTema.GroupBy(g => g.Nome).Any(a => a.Count() > 1))
+        if (_configObj.ListaTema.GroupBy(g => g.Nome.ToUpper()).Any(a => a.Count() > 1))
         {
             Snackbar.Add("Existem temas repetidos! Verifique.", Severity.Warning);
             return false;

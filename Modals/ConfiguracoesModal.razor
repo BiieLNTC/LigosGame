@@ -1,0 +1,151 @@
+﻿@using Blazored.LocalStorage
+@using LigosGame.Models.Enums
+@using LigosGame.Constants
+@using LigosGame.Models
+
+@inject ISnackbar Snackbar
+@inject ILocalStorageService _localStorageService
+
+@if (OnInitializedCompleted)
+{
+    <MudDialog>
+        <DialogContent>
+            <MudSelect @bind-Value="@_configObj.Dificuldade"
+                       T="ConfiguracoesEnum.EDificuldadeJogo"
+                       Label="Dificuldade"
+                       Variant="Variant.Filled"
+                       AnchorOrigin="Origin.BottomCenter"
+                       ClearIcon="false">
+                @foreach (var item in _listaDificuldade)
+                {
+                    <MudSelectItem T="ConfiguracoesEnum.EDificuldadeJogo" Value="@item">
+                        @GenericClassEnum.ObterEnumDescription(item)
+                    </MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudDataGrid Items="@_configObj.ListaTema"
+                         Filterable="false"
+                         SortMode="@SortMode.None"
+                         Groupable="false"
+                         EditMode="@DataGridEditMode.Cell"
+                         ReadOnly="false"
+                         Class="mt-4">
+                <Columns>
+                    <TemplateColumn Editable="false">
+                        <CellTemplate>
+                            <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" OnClick="@(() => RemoverTema(context.Item.Id))" />
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <PropertyColumn Property="x => x.Nome" Title="Tema" />
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="Tema" />
+                </PagerContent>
+            </MudDataGrid>
+
+            <MudButton OnClick="@AdicionarTema"
+                       Color="@Color.Success"
+                       Class="add-item-btn mt-4"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       Variant="Variant.Filled">
+                Adicionar
+            </MudButton>
+
+        </DialogContent>
+        <DialogActions>
+            <MudButton Color="Color.Primary" OnClick="Submit" StartIcon="@Icons.Material.Filled.Save" Variant="Variant.Filled">Salvar</MudButton>
+            <MudButton Color="Color.Secondary" OnClick="Cancel" StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Filled">Cancelar</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+else
+{
+    <CarregandoComponent />
+}
+
+@code {
+
+    #region Declaration
+
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+
+    private Configuracao _configObj { get; set; } = new();
+    private List<ConfiguracoesEnum.EDificuldadeJogo> _listaDificuldade { get; set; } = new();
+
+    private bool OnInitializedCompleted { get; set; }
+
+    #endregion
+
+    #region Functions
+
+    protected override async Task OnInitializedAsync()
+    {
+        _configObj = await _localStorageService.GetItemAsync<Configuracao>(StorageConstants.CONFIGURACAO_KEY);
+
+        _listaDificuldade = GenericClassEnum.ObterListaEnum<ConfiguracoesEnum.EDificuldadeJogo>();
+
+        OnInitializedCompleted = true;
+    }
+
+    private void AdicionarTema()
+    {
+        if (ValidarTemasAdicao())
+            _configObj.ListaTema.Add(new Tema());
+    }
+
+    private void RemoverTema(Guid arg)
+    {
+        _configObj.ListaTema.RemoveAll(r => r.Id == arg);
+    }
+
+    private async Task Submit()
+    {
+        _configObj.ListaTema.RemoveAll(r => r.Nome == null || r.Nome == string.Empty);
+
+        if (ValidarTemasSubmit())
+        {
+            await _localStorageService.SetItemAsync<Configuracao>(StorageConstants.CONFIGURACAO_KEY, _configObj);
+
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private bool ValidarTemasAdicao()
+    {
+        if (_configObj.ListaTema.Any(a => a.Nome == null || a.Nome == string.Empty))
+        {
+            Snackbar.Add("Preencha os temas vazios antes de adicionar outro!", Severity.Warning);
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool ValidarTemasSubmit()
+    {
+        if (_configObj.ListaTema == null || _configObj.ListaTema.Count == 0)
+        {
+            Snackbar.Add("É necessário informar os temas!", Severity.Warning);
+            return false;
+        }
+
+        if (_configObj.ListaTema.GroupBy(g => g.Nome).Any(a => a.Count() > 1))
+        {
+            Snackbar.Add("Existem temas repetidos! Verifique.", Severity.Warning);
+            return false;
+        }
+
+        return true;
+    }
+
+    #endregion
+}
+
+<style>
+    .mud-dialog-actions {
+        justify-content: center!important;
+    }
+</style>

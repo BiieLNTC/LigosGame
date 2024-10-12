@@ -1,0 +1,43 @@
+﻿@using LigosGame.Constants
+@using LigosGame.Modals
+@attribute [Route(UrlConstants.INDEX)]
+
+@using MudBlazor
+
+@inject NavigationManager _navegation
+@inject IDialogService DialogService
+
+<PageTitle>Ligos</PageTitle>
+
+<div class="menu">
+    <h1>Ligos</h1>
+
+    <div class="column-buttons">
+        <button class="btn-default" @onclick="@IniciarJogo">JOGAR</button>
+        <button class="btn-default" @onclick="@ExibirConfiguracoes">OPÇÕES</button>
+    </div>
+</div>
+
+@code {
+
+    #region Functions
+
+    private void IniciarJogo()
+    {
+        _navegation.NavigateTo(UrlConstants.JOGAR);
+    }
+
+    private Task ExibirConfiguracoes()
+    {
+        var options = new DialogOptions
+            {
+                BackdropClick = false,
+                MaxWidth = MaxWidth.Large
+            };
+
+        return DialogService.ShowAsync<ConfiguracoesModal>("Configurações", options);
+    }
+
+    #endregion
+
+}

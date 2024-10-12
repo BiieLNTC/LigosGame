@@ -1,0 +1,46 @@
+﻿@using LigosGame.Constants
+
+@inject NavigationManager _navegation
+
+<MudDialog>
+    <TitleContent>
+        @Titulo
+    </TitleContent>
+    <DialogContent>
+        @Mensagem
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Secondary" OnClick="Cancel" StartIcon="@Icons.Material.Filled.Home" Variant="Variant.Filled">Menu</MudButton>
+        <MudButton Color="Color.Primary" OnClick="NextRound" StartIcon="@Icons.Material.Filled.NavigateNext" Variant="Variant.Filled">Próxima Rodada</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    #region Declaration
+
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public string Titulo { get; set; }
+    [Parameter] public string Mensagem { get; set; }
+
+    [Parameter] public EventCallback EventoProximaRodada { get; set; }
+
+    #endregion
+
+    #region Functions
+
+    private async Task NextRound()
+    {
+        await EventoProximaRodada.InvokeAsync();
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel()
+    {
+        _navegation.NavigateTo(UrlConstants.INDEX);
+        MudDialog.Cancel();
+    }
+
+    #endregion
+}

@@ -1,0 +1,41 @@
+﻿@using Blazored.LocalStorage
+@using LigosGame.Constants
+@using LigosGame.Models
+
+@inject ILocalStorageService _localStorageService
+@inherits LayoutComponentBase
+
+@Body
+
+
+<MudThemeProvider Theme="@AplicarTema()" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+@code{
+    #region Functions
+
+    protected override async Task OnInitializedAsync(){
+
+        var config = await _localStorageService.GetItemAsync<Configuracao>(StorageConstants.CONFIGURACAO_KEY);
+
+        if (config == null)
+            await _localStorageService.SetItemAsync<Configuracao>(StorageConstants.CONFIGURACAO_KEY, new Configuracao());
+    }
+
+    private MudTheme AplicarTema()
+    {
+        return new MudTheme()
+            {
+                PaletteLight = new PaletteLight()
+                {
+                    Primary = Colors.Blue.Darken4,
+                    Secondary = Colors.BlueGray.Lighten2,
+                    White = Colors.Blue.Lighten4
+                },
+            };
+    }
+
+    #endregion
+}

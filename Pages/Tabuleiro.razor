@@ -1,0 +1,206 @@
+﻿@attribute [Route(UrlConstants.JOGAR)]
+
+@using System.Globalization
+@using Blazored.LocalStorage
+@using LigosGame.Modals
+@using LigosGame.Constants
+@using LigosGame.Models
+
+@inject IDialogService DialogService
+@inject ILocalStorageService _localStorageService
+@inject NavigationManager _navegation
+
+@if (OnInitializedCompleted)
+{
+    <div class="container">
+        <div class="header-tabuleiro">
+
+            @if (VisibilityBotaoIniciar)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Home" Color="Color.Primary" Size="Size.Medium" OnClick="VoltarMenu" />
+                <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Color="Color.Primary" Size="Size.Medium" OnClick="@(() => {IniciarRodada(); VisibilityBotaoIniciar = false; })" />
+            }
+            else
+            {
+                <h1>@_timerCount -  @TemaSorteado.Nome</h1>
+            }
+
+        </div>
+
+        <div class="tabuleiro">
+            <div class="center-button">
+                <button type="button" @onclick="@OnCenterButtonClick">Centro</button>
+            </div>
+
+            <div class="letras">
+                @for (int i = 0; i < 26; i++)
+                {
+                    char letra = (char)('A' + i);
+
+                    <div class="letter-button" style="transform: rotate(@(ObterCalculoRotacao(i))deg) translate(180px) rotate(@(ObterCalculoRotacao(-i))deg);">
+                        <button class="@(_currentCharSelected == letra ? "current-button-selected" : "")"
+                                type="button"
+                                @onclick="@(() => TratarSelecaoLetra(letra))"
+                                disabled="@_listaLetrasSelecionadas.Contains(letra)">
+                            @(letra)
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="footer-tabuleiro">
+            @if (VisibilityBotaoIniciar)
+            {
+                <h1 style="transform: rotate(0deg)">Aguardando início...</h1>
+            }
+            else
+            {
+                <h1 class="inverter">@_timerCount -  @TemaSorteado.Nome</h1>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <CarregandoComponent />
+}
+@code {
+    #region Declaration
+
+    private int _timerCount { get; set; }
+    private System.Timers.Timer Timer;
+
+    private char _currentCharSelected { get; set; }
+    private List<char> _listaLetrasSelecionadas { get; set; } = new();
+
+    private Configuracao _configObj { get; set; }
+    private List<Guid> _listaTemasUtilizados { get; set; } = new();
+    private Tema TemaSorteado { get; set; } = new();
+
+    private bool VisibilityBotaoIniciar { get; set; } = true;
+
+    private bool OnInitializedCompleted { get; set; }
+
+    #endregion
+
+    #region Functions
+
+    protected override async Task OnInitializedAsync()
+    {
+        TimerConfig();
+        _configObj = await _localStorageService.GetItemAsync<Configuracao>(StorageConstants.CONFIGURACAO_KEY);
+        OnInitializedCompleted = true;
+    }
+
+    private async Task GameOver()
+    {
+        await AbrirModalMensagem("Game Over", "O tempo acabou!");
+    }
+
+    private async Task OnCenterButtonClick()
+    {
+        if (_currentCharSelected == default) return;
+
+        _currentCharSelected = default;
+
+        if (_listaLetrasSelecionadas.Count == 26)
+        {
+            await AbrirModalMensagem("Vitória", "Parabéns, todas as letras foram adivinhadas!");
+            Timer.Stop();
+            return;
+        }
+
+        StartCount();
+    }
+
+    private void TratarSelecaoLetra(char letraSelecionada)
+    {
+        if (_currentCharSelected != default || VisibilityBotaoIniciar) return;
+
+        _listaLetrasSelecionadas.Add(letraSelecionada);
+        _currentCharSelected = letraSelecionada;
+        StateHasChanged();
+    }
+
+    private string ObterCalculoRotacao(int posicaoLetra)
+    {
+        return (posicaoLetra * 13.85).ToString(CultureInfo.InvariantCulture);
+    }
+
+    private async Task AbrirModalMensagem(string titulo, string mensagem)
+    {
+        var options = new DialogOptions
+            {
+                BackdropClick = false,
+                MaxWidth = MaxWidth.Large
+            };
+
+        var parameters = new DialogParameters<AlertaModal>
+        {
+            {p => p.Titulo, titulo},
+            {p => p.Mensagem, mensagem},
+            {p => p.EventoProximaRodada, new EventCallbackFactory().Create(this, new Action(IniciarRodada))},
+        };
+
+        var dialog = await DialogService.ShowAsync<AlertaModal>("Alerta", parameters, options);
+    }
+
+    private void IniciarRodada()
+    {
+        if (_listaTemasUtilizados.Count == _configObj.ListaTema.Count) _listaTemasUtilizados.Clear();
+
+        var listFiltrada = _configObj.ListaTema.Where(w => !_listaTemasUtilizados.Contains(w.Id)).ToList();
+
+        Random random = new Random();
+
+        var indicie = random.Next(0, listFiltrada.Count);
+
+        var tema = listFiltrada[indicie];
+
+        TemaSorteado = tema;
+        _listaTemasUtilizados.Add(tema.Id);
+
+        _listaLetrasSelecionadas = new();
+        _currentCharSelected = default;
+
+        StartCount();
+    }
+
+    private void VoltarMenu() => _navegation.NavigateTo(UrlConstants.INDEX);
+
+
+    #region Timer
+
+    private void StartCount()
+    {
+        _timerCount = _configObj.ObterSegundosRodada();
+        Timer.Start();
+        StateHasChanged();
+    }
+
+    private void TimerConfig()
+    {
+        Timer = new();
+        Timer.Elapsed += async (s, e) => await ElapsedEvent();
+        Timer.AutoReset = true;
+        Timer.Interval = 1000;
+    }
+
+    private async Task ElapsedEvent()
+    {
+        if (_timerCount == 0)
+        {
+            Timer.Stop();
+            await GameOver();
+            return;
+        }
+
+        _timerCount -= 1;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    #endregion
+
+    #endregion
+}

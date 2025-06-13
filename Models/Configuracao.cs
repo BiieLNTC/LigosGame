@@ -28,6 +28,38 @@ namespace LigosGame.Models
                 {
                     Nome = "CEP"
                 },
+                  new Tema()
+                {
+                    Nome = "Profissões"
+                },
+                new Tema()
+                {
+                    Nome = "Pessoas Famosas"
+                },
+                new Tema()
+                {
+                    Nome = "Nomes Femininos"
+                },
+                new Tema()
+                {
+                    Nome = "Nomes Masculinos"
+                },
+                new Tema()
+                {
+                    Nome = "Times de Futebol"
+                },
+                new Tema()
+                {
+                    Nome = "Países"
+                },
+                new Tema()
+                {
+                    Nome = "Minha sogra é"
+                },
+                new Tema()
+                {
+                    Nome = "Meu namorado(a) é"
+                },
             };
         }
 

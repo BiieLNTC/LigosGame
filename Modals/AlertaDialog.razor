@@ -1,15 +1,22 @@
 ﻿@using LigosGame.Constants
 
-<MudDialog>
-    <TitleContent>
-        @Titulo
-    </TitleContent>
+<MudDialog Class="configuracoes-dialog">
+        <TitleContent>
+            <div class="dialog-header">
+                <MudIcon Icon="@Icons.Material.Filled.Warning" Class="header-icon" />
+                <MudText Typo="Typo.h5" Class="header-title">@Titulo</MudText>
+            </div>
+        </TitleContent>
     <DialogContent>
-        @Mensagem
+            <div class="config-content">
+                @Mensagem
+            </div>
     </DialogContent>
     <DialogActions>
-        <MudButton Color="Color.Secondary" OnClick="Cancel" StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Filled">@NomeBtnCancelar</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Confirmar" StartIcon="@Icons.Material.Filled.Check" Variant="Variant.Filled">@NomeBtnConfirmar</MudButton>
+            <div class="dialog-actions">
+                <MudButton Class="cancel-btn" Color="Color.Secondary" OnClick="Cancel" StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Outlined">@NomeBtnCancelar</MudButton>
+                <MudButton Class="save-btn" Color="Color.Primary" OnClick="Confirmar" StartIcon="@Icons.Material.Filled.Check" Variant="Variant.Filled">@NomeBtnConfirmar</MudButton>
+            </div>
     </DialogActions>
 </MudDialog>
 

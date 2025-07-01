@@ -169,7 +169,7 @@ else
         var parameters = new DialogParameters<AlertaDialog>
         {
             {p => p.Titulo, "Deletar"},
-            {p => p.Mensagem, $"Atenção, deseja deletar o tema {_configObj.ListaTema.Where(w => w.Id == arg).Select(s => s.Nome).FirstOrDefault()}?"},
+            {p => p.Mensagem, $"Atenção, deseja deletar o tema \"{_configObj.ListaTema.Where(w => w.Id == arg).Select(s => s.Nome).FirstOrDefault()}\"?"},
             {p => p.NomeBtnConfirmar, "Deletar"},
         };
 

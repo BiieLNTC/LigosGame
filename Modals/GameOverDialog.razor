@@ -2,16 +2,23 @@
 
 @inject NavigationManager _navegation
 
-<MudDialog>
+<MudDialog Class="configuracoes-dialog">
     <TitleContent>
-        @Titulo
+        <div class="dialog-header">
+            <MudText Typo="Typo.h5" Class="header-title">@Titulo</MudText>
+        </div>
     </TitleContent>
     <DialogContent>
-        @Mensagem
+        <div class="config-content">
+            @Mensagem
+        </div>
     </DialogContent>
     <DialogActions>
-        <MudButton Color="Color.Secondary" OnClick="Cancel" StartIcon="@Icons.Material.Filled.Home" Variant="Variant.Filled">Menu</MudButton>
-        <MudButton Color="Color.Primary" OnClick="NextRound" StartIcon="@Icons.Material.Filled.NavigateNext" Variant="Variant.Filled">Próxima Rodada</MudButton>
+        <div class="dialog-actions">
+            <MudButton Class="cancel-btn" Color="Color.Secondary" OnClick="Cancel" StartIcon="@Icons.Material.Filled.Home" Variant="Variant.Outlined">Menu</MudButton>
+            <MudButton Class="save-btn" Color="Color.Primary" OnClick="NextRound" StartIcon="@Icons.Material.Filled.NavigateNext" Variant="Variant.Filled">Próxima Rodada</MudButton>
+        </div>
+
     </DialogActions>
 </MudDialog>
 

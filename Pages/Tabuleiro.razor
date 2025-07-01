@@ -1,5 +1,4 @@
-﻿@attribute [Route(UrlConstants.JOGAR)] 
-@* @page "/Jogar" *@
+﻿@attribute [Route(UrlConstants.JOGAR)]
 
 @using System.Globalization
 @using Blazored.LocalStorage
@@ -24,13 +23,32 @@
             else
             {
                 <h1>@_timerCount -  @TemaSorteado.Nome</h1>
+                <div class="timer-container">
+                    <div class="timer-bar" style="width: @GetTimerPercentage()%"></div>
+                </div>
+                <div class="game-info">
+                    <span>Letras: @_listaLetrasSelecionadas.Count/26</span>
+                </div>
             }
 
         </div>
 
         <div class="tabuleiro">
             <div class="center-button">
-                <button type="button" @onclick="@OnCenterButtonClick">Centro</button>
+                <button type="button" @onclick="@OnCenterButtonClick">
+                    @if (_currentCharSelected != default)
+                    {
+                        @_currentCharSelected
+                    }
+                    else if (!VisibilityBotaoIniciar)
+                    {
+                        <span>Selecione<br>uma letra</span>
+                    }
+                    else
+                    {
+                        <span>Iniciar</span>
+                    }
+                </button>
             </div>
 
             <div class="letras">
@@ -53,11 +71,19 @@
         <div class="footer-tabuleiro">
             @if (VisibilityBotaoIniciar)
             {
-                <h1 style="transform: rotate(0deg)">Aguardando início...</h1>
+                <h1>Aguardando início...</h1>
             }
             else
             {
-                <h1 class="inverter">@_timerCount -  @TemaSorteado.Nome</h1>
+                <div class="inverter">
+                    <h1>@_timerCount -  @TemaSorteado.Nome</h1>
+                    <div class="timer-container">
+                        <div class="timer-bar" style="width: @GetTimerPercentage()%"></div>
+                    </div>
+                    <div class="game-info">
+                        <span>Letras: @_listaLetrasSelecionadas.Count/26</span>
+                    </div>
+                </div>
             }
         </div>
     </div>
@@ -66,10 +92,12 @@ else
 {
     <CarregandoComponent />
 }
+
 @code {
     #region Declaration
 
     private int _timerCount { get; set; }
+    private int _maxTime { get; set; }
     private System.Timers.Timer Timer;
 
     private char _currentCharSelected { get; set; }
@@ -137,14 +165,14 @@ else
                 MaxWidth = MaxWidth.Large
             };
 
-        var parameters = new DialogParameters<AlertaModal>
+        var parameters = new DialogParameters<GameOverDialog>
         {
             {p => p.Titulo, titulo},
             {p => p.Mensagem, mensagem},
             {p => p.EventoProximaRodada, new EventCallbackFactory().Create(this, new Action(IniciarRodada))},
         };
 
-        var dialog = await DialogService.ShowAsync<AlertaModal>("Alerta", parameters, options);
+        var dialog = await DialogService.ShowAsync<GameOverDialog>("Alerta", parameters, options);
     }
 
     private void IniciarRodada()
@@ -170,12 +198,19 @@ else
 
     private void VoltarMenu() => _navegation.NavigateTo(UrlConstants.INDEX);
 
+    private double GetTimerPercentage()
+    {
+        if (_maxTime <= 0) return 0;
+        double percentage = (_timerCount / (double)_maxTime) * 100;
+        return percentage; // Garante que o valor esteja entre 0 e 100
+    }
 
     #region Timer
 
     private void StartCount()
     {
         _timerCount = _configObj.ObterSegundosRodada();
+        _maxTime = _timerCount > 0 ? _timerCount : 1; // Evita divisão por zero
         Timer.Start();
         StateHasChanged();
     }
@@ -190,7 +225,7 @@ else
 
     private async Task ElapsedEvent()
     {
-        if (_timerCount == 0)
+        if (_timerCount <= 0)
         {
             Timer.Stop();
             await GameOver();

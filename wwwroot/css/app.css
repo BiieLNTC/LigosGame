@@ -55,7 +55,6 @@ header-tabuleiro-inicial {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    flex-shrink: 0;
 }
 
     .header-tabuleiro h1,

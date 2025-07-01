@@ -127,6 +127,7 @@ header-tabuleiro-inicial {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    min-height: inherit;
 }
 
 /* Tabuleiro do jogo  */

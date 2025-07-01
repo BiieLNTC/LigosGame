@@ -5,109 +5,196 @@
 
 @inject ISnackbar Snackbar
 @inject ILocalStorageService _localStorageService
+@inject IJSRuntime JSRuntime
+@inject IDialogService DialogService
 
 @if (OnInitializedCompleted)
 {
-    <MudDialog>
+    <MudDialog Class="configuracoes-dialog">
+        <TitleContent>
+            <div class="dialog-header">
+                <MudIcon Icon="@Icons.Material.Filled.Settings" Class="header-icon" />
+                <MudText Typo="Typo.h5" Class="header-title">Configurações</MudText>
+            </div>
+        </TitleContent>
+
         <DialogContent>
-            <MudSelect @bind-Value="@_configObj.Dificuldade"
-                       T="ConfiguracoesEnum.EDificuldadeJogo"
-                       Label="Dificuldade"
-                       Variant="Variant.Filled"
-                       AnchorOrigin="Origin.BottomCenter"
-                       ClearIcon="false">
-                @foreach (var item in _listaDificuldade)
-                {
-                    <MudSelectItem T="ConfiguracoesEnum.EDificuldadeJogo" Value="@item">
-                        @GenericClassEnum.ObterEnumDescription(item)
-                    </MudSelectItem>
-                }
-            </MudSelect>
+            <div class="config-content">
+                <div class="config-section">
+                    <div class="section-header">
+                        <MudIcon Icon="@Icons.Material.Filled.Speed" Class="section-icon" />
+                        <MudText Typo="Typo.h6" Class="section-title">Dificuldade</MudText>
+                    </div>
+                    <MudSelect @bind-Value="@_configObj.Dificuldade"
+                               T="ConfiguracoesEnum.EDificuldadeJogo"
+                               Label="Selecione a dificuldade"
+                               Variant="Variant.Outlined"
+                               Class="difficulty-select"
+                               AnchorOrigin="Origin.BottomCenter">
+                        @foreach (var item in _listaDificuldade)
+                        {
+                            <MudSelectItem T="ConfiguracoesEnum.EDificuldadeJogo" Value="@item">
+                                <div class="select-item">
+                                    <MudIcon Icon="@GetDifficultyIcon(item)" Size="Size.Small" Class="me-2" />
+                                    @GenericClassEnum.ObterEnumDescription(item)
+                                </div>
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
 
-            <MudDataGrid Items="@_configObj.ListaTema"
-                         Filterable="false"
-                         SortMode="@SortMode.None"
-                         Groupable="false"
-                         EditMode="@DataGridEditMode.Cell"
-                         ReadOnly="false"
-                         Class="mt-4">
-                <Columns>
-                    <TemplateColumn Editable="false">
-                        <CellTemplate>
-                            <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" OnClick="@(() => RemoverTema(context.Item.Id))" />
-                        </CellTemplate>
-                    </TemplateColumn>
-                    <PropertyColumn Property="x => x.Nome" Title="Tema" />
-                </Columns>
-                <PagerContent>
-                    <MudDataGridPager T="Tema" />
-                </PagerContent>
-            </MudDataGrid>
+                <div class="config-section">
+                    <div class="section-header">
+                        <MudIcon Icon="@Icons.Material.Filled.Category" Class="section-icon" />
+                        <MudText Typo="Typo.h6" Class="section-title">Temas do Jogo</MudText>
+                        <MudSpacer />
+                        <MudButton OnClick="@AdicionarTema"
+                                   Color="@Color.Success"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   Variant="Variant.Filled"
+                                   Class="add-theme-btn">
+                            Adicionar
+                        </MudButton>
+                    </div>
 
-            <MudButton OnClick="@AdicionarTema"
-                       Color="@Color.Success"
-                       Class="add-item-btn mt-4"
-                       StartIcon="@Icons.Material.Filled.Add"
-                       Variant="Variant.Filled">
-                Adicionar
-            </MudButton>
-
+                    @if (_configObj.ListaTema?.Any() == true)
+                    {
+                        <div class="themes-container">
+                            @foreach (var tema in _configObj.ListaTema.ToList())
+                            {
+                                <div class="theme-item">
+                                    <MudTextField @bind-Value="tema.Nome"
+                                                  @attributes="@(new Dictionary<string, object> { { "id", $"tema-{tema.Id}" } })"
+                                                  Label="Nome do tema"
+                                                  Variant="Variant.Outlined"
+                                                  Class="theme-input"
+                                                  InputId="@($"tema-{tema.Id}")"
+                                                  Immediate="true" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   Class="delete-btn"
+                                                   OnClick="@(async () => await RemoverTema(tema.Id))" />
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <MudIcon Icon="@Icons.Material.Outlined.Category" Class="empty-icon" />
+                            <MudText Typo="Typo.body1" Class="empty-text">
+                                Nenhum tema adicionado ainda
+                            </MudText>
+                            <MudText Typo="Typo.body2" Class="empty-subtitle">
+                                Clique em "Adicionar Tema" para começar
+                            </MudText>
+                        </div>
+                    }
+                </div>
+            </div>
         </DialogContent>
+
         <DialogActions>
-            <MudButton Color="Color.Primary" OnClick="Submit" StartIcon="@Icons.Material.Filled.Save" Variant="Variant.Filled">Salvar</MudButton>
-            <MudButton Color="Color.Secondary" OnClick="Cancel" StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Filled">Cancelar</MudButton>
+            <div class="dialog-actions">
+                <MudButton Color="Color.Secondary"
+                           OnClick="Cancel"
+                           StartIcon="@Icons.Material.Filled.Close"
+                           Variant="Variant.Outlined"
+                           Class="cancel-btn">
+                    Cancelar
+                </MudButton>
+                <MudButton Color="Color.Primary"
+                           OnClick="Submit"
+                           StartIcon="@Icons.Material.Filled.Save"
+                           Variant="Variant.Filled"
+                           Class="save-btn">
+                    Salvar
+                </MudButton>
+            </div>
         </DialogActions>
     </MudDialog>
 }
 else
 {
-    <CarregandoComponent />
+    <div class="loading-container">
+        <CarregandoComponent />
+    </div>
 }
 
 @code {
-
     #region Declaration
-
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
-
     private Configuracao _configObj { get; set; } = new();
     private List<ConfiguracoesEnum.EDificuldadeJogo> _listaDificuldade { get; set; } = new();
-
     private bool OnInitializedCompleted { get; set; }
 
+    private bool _precisaFocarUltimoTema = false;
+    private string _ultimoIdTemaAdicionado;
     #endregion
 
     #region Functions
-
     protected override async Task OnInitializedAsync()
     {
         _configObj = await _localStorageService.GetItemAsync<Configuracao>(StorageConstants.CONFIGURACAO_KEY);
-
         _listaDificuldade = GenericClassEnum.ObterListaEnum<ConfiguracoesEnum.EDificuldadeJogo>();
-
         OnInitializedCompleted = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_precisaFocarUltimoTema && !string.IsNullOrWhiteSpace(_ultimoIdTemaAdicionado))
+        {
+            _precisaFocarUltimoTema = false;
+
+            await Task.Delay(100);
+            await JSRuntime.InvokeVoidAsync("focarUltimoCampo", _ultimoIdTemaAdicionado);
+        }
     }
 
     private void AdicionarTema()
     {
         if (ValidarTemasAdicao())
-            _configObj.ListaTema.Add(new Tema());
+        {
+            var novoTema = new Tema();
+            _configObj.ListaTema.Add(novoTema);
+            _ultimoIdTemaAdicionado = $"tema-{novoTema.Id}";
+            _precisaFocarUltimoTema = true;
+        }
     }
 
-    private void RemoverTema(Guid arg)
+    private async Task RemoverTema(Guid arg)
     {
-        _configObj.ListaTema.RemoveAll(r => r.Id == arg);
+        var parameters = new DialogParameters<AlertaDialog>
+        {
+            {p => p.Titulo, "Deletar"},
+            {p => p.Mensagem, $"Atenção, deseja deletar o tema \"{_configObj.ListaTema.Where(w => w.Id == arg).Select(s => s.Nome).FirstOrDefault()}\"?"},
+            {p => p.NomeBtnConfirmar, "Deletar"},
+        };
+
+        var options = new DialogOptions
+            {
+                BackdropClick = false,
+                MaxWidth = MaxWidth.Large
+            };
+
+        var dialog = await DialogService.ShowAsync<AlertaDialog>("Deletar", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+            _configObj.ListaTema.RemoveAll(r => r.Id == arg);
     }
 
     private async Task Submit()
     {
         _configObj.ListaTema.RemoveAll(r => r.Nome == null || r.Nome == string.Empty);
-
         if (ValidarTemasSubmit())
         {
             await _localStorageService.SetItemAsync<Configuracao>(StorageConstants.CONFIGURACAO_KEY, _configObj);
-
             MudDialog.Close(DialogResult.Ok(true));
+
+            Snackbar.Add("As configurações foram atualizadas!", Severity.Success);
         }
     }
 
@@ -120,7 +207,6 @@ else
             Snackbar.Add("Preencha os temas vazios antes de adicionar outro!", Severity.Warning);
             return false;
         }
-
         return true;
     }
 
@@ -131,7 +217,6 @@ else
             Snackbar.Add("É necessário informar os temas!", Severity.Warning);
             return false;
         }
-
         if (_configObj.ListaTema.GroupBy(g => g.Nome.ToUpper()).Any(a => a.Count() > 1))
         {
             Snackbar.Add("Existem temas repetidos! Verifique.", Severity.Warning);
@@ -141,11 +226,25 @@ else
         return true;
     }
 
+    private string GetDifficultyIcon(ConfiguracoesEnum.EDificuldadeJogo dificuldade)
+    {
+        return dificuldade switch
+        {
+            ConfiguracoesEnum.EDificuldadeJogo.Facil => Icons.Material.Filled.SentimentVerySatisfied,
+            ConfiguracoesEnum.EDificuldadeJogo.Medio => Icons.Material.Filled.SentimentNeutral,
+            ConfiguracoesEnum.EDificuldadeJogo.Dificil => Icons.Material.Filled.SentimentVeryDissatisfied,
+            _ => Icons.Material.Filled.Help
+        };
+    }
     #endregion
 }
 
-<style>
-    .mud-dialog-actions {
-        justify-content: center!important;
-    }
-</style>
+<script>
+    window.focarUltimoCampo = (elementId) => {
+        const elemento = document.getElementById(elementId);
+
+        if (elemento) {
+            elemento.focus()
+        }
+    };
+</script>

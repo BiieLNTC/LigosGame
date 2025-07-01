@@ -1,5 +1,4 @@
-﻿@attribute [Route(UrlConstants.JOGAR)] 
-@* @page "/Jogar" *@
+﻿@attribute [Route(UrlConstants.JOGAR)]
 
 @using System.Globalization
 @using Blazored.LocalStorage
@@ -15,29 +14,48 @@
 {
     <div class="container">
         <div class="header-tabuleiro">
-
             @if (VisibilityBotaoIniciar)
             {
-                <MudIconButton Icon="@Icons.Material.Filled.Home" Color="Color.Primary" Size="Size.Medium" OnClick="VoltarMenu" />
-                <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Color="Color.Primary" Size="Size.Medium" OnClick="@(() => {IniciarRodada(); VisibilityBotaoIniciar = false; })" />
+                <div class="header-tabuleiro-inicial">
+
+                    <MudIconButton Icon="@Icons.Material.Filled.Home" Color="Color.Primary" Size="Size.Medium" OnClick="VoltarMenu" />
+                    <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Color="Color.Primary" Size="Size.Medium" OnClick="@(() => {IniciarRodada(); VisibilityBotaoIniciar = false; })" />
+                </div>
             }
             else
             {
-                <h1>@_timerCount -  @TemaSorteado.Nome</h1>
+                <h1>@_timerCount.ToString("0") - @TemaSorteado.Nome</h1>
+                <div class="timer-container">
+                    <div class="timer-bar" style="width: @GetTimerPercentage()%; transition-duration: @GetTransitionDuration()s; background-color: @GetTimerColor();"></div>
+                </div>
+                <div class="game-info">
+                    <span>Letras: @_listaLetrasSelecionadas.Count/26</span>
+                </div>
             }
-
         </div>
 
         <div class="tabuleiro">
             <div class="center-button">
-                <button type="button" @onclick="@OnCenterButtonClick">Centro</button>
+                <button type="button" @onclick="@OnCenterButtonClick">
+                    @if (_currentCharSelected != default)
+                    {
+                        @_currentCharSelected
+                    }
+                    else if (!VisibilityBotaoIniciar)
+                    {
+                        <span>Selecione<br>uma letra</span>
+                    }
+                    else
+                    {
+                        <span>Aguardando<br>Inicio...</span>
+                    }
+                </button>
             </div>
 
             <div class="letras">
                 @for (int i = 0; i < 26; i++)
                 {
                     char letra = (char)('A' + i);
-
                     <div class="letter-button" style="transform: rotate(@(ObterCalculoRotacao(i))deg) translate(180px) rotate(@(ObterCalculoRotacao(-i))deg);">
                         <button class="@(_currentCharSelected == letra ? "current-button-selected" : "")"
                                 type="button"
@@ -53,11 +71,19 @@
         <div class="footer-tabuleiro">
             @if (VisibilityBotaoIniciar)
             {
-                <h1 style="transform: rotate(0deg)">Aguardando início...</h1>
+                <h1>Aguardando início...</h1>
             }
             else
             {
-                <h1 class="inverter">@_timerCount -  @TemaSorteado.Nome</h1>
+                <div class="inverter">
+                    <h1>@_timerCount.ToString("0") - @TemaSorteado.Nome</h1>
+                    <div class="timer-container">
+                        <div class="timer-bar" style="width: @GetTimerPercentage()%; transition-duration: @GetTransitionDuration()s; background-color: @GetTimerColor();"></div>
+                    </div>
+                    <div class="game-info">
+                        <span>Letras: @_listaLetrasSelecionadas.Count/26</span>
+                    </div>
+                </div>
             }
         </div>
     </div>
@@ -66,37 +92,35 @@ else
 {
     <CarregandoComponent />
 }
+
 @code {
     #region Declaration
-
-    private int _timerCount { get; set; }
+    private double _timerCount { get; set; }
+    private int _maxTime { get; set; }
     private System.Timers.Timer Timer;
-
     private char _currentCharSelected { get; set; }
     private List<char> _listaLetrasSelecionadas { get; set; } = new();
-
     private Configuracao _configObj { get; set; }
     private List<Guid> _listaTemasUtilizados { get; set; } = new();
     private Tema TemaSorteado { get; set; } = new();
-
     private bool VisibilityBotaoIniciar { get; set; } = true;
-
     private bool OnInitializedCompleted { get; set; }
-
+    private bool _isTimerRunning { get; set; }
     #endregion
 
     #region Functions
-
     protected override async Task OnInitializedAsync()
     {
         TimerConfig();
         _configObj = await _localStorageService.GetItemAsync<Configuracao>(StorageConstants.CONFIGURACAO_KEY);
+        _maxTime = _configObj.ObterSegundosRodada();
         OnInitializedCompleted = true;
     }
 
     private async Task GameOver()
     {
-        await AbrirModalMensagem("Game Over", "O tempo acabou!");
+        _isTimerRunning = false;
+        await AbrirModalMensagem("Game Over", $"O tempo acabou! \nA pontuação foi de: {_listaLetrasSelecionadas.Count}/26");
     }
 
     private async Task OnCenterButtonClick()
@@ -109,6 +133,7 @@ else
         {
             await AbrirModalMensagem("Vitória", "Parabéns, todas as letras foram adivinhadas!");
             Timer.Stop();
+            _isTimerRunning = false;
             return;
         }
 
@@ -137,14 +162,14 @@ else
                 MaxWidth = MaxWidth.Large
             };
 
-        var parameters = new DialogParameters<AlertaModal>
+        var parameters = new DialogParameters<GameOverDialog>
         {
             {p => p.Titulo, titulo},
             {p => p.Mensagem, mensagem},
             {p => p.EventoProximaRodada, new EventCallbackFactory().Create(this, new Action(IniciarRodada))},
         };
 
-        var dialog = await DialogService.ShowAsync<AlertaModal>("Alerta", parameters, options);
+        var dialog = await DialogService.ShowAsync<GameOverDialog>("Alerta", parameters, options);
     }
 
     private void IniciarRodada()
@@ -154,14 +179,11 @@ else
         var listFiltrada = _configObj.ListaTema.Where(w => !_listaTemasUtilizados.Contains(w.Id)).ToList();
 
         Random random = new Random();
-
         var indicie = random.Next(0, listFiltrada.Count);
-
         var tema = listFiltrada[indicie];
 
         TemaSorteado = tema;
         _listaTemasUtilizados.Add(tema.Id);
-
         _listaLetrasSelecionadas = new();
         _currentCharSelected = default;
 
@@ -170,38 +192,80 @@ else
 
     private void VoltarMenu() => _navegation.NavigateTo(UrlConstants.INDEX);
 
-
     #region Timer
 
     private void StartCount()
     {
         _timerCount = _configObj.ObterSegundosRodada();
+        _isTimerRunning = true;
         Timer.Start();
-        StateHasChanged();
+        InvokeAsync(StateHasChanged);
     }
 
     private void TimerConfig()
     {
-        Timer = new();
+        Timer = new System.Timers.Timer();
         Timer.Elapsed += async (s, e) => await ElapsedEvent();
         Timer.AutoReset = true;
-        Timer.Interval = 1000;
+        Timer.Interval = 1000; // Mudado para 1 segundo para maior estabilidade
     }
 
     private async Task ElapsedEvent()
     {
-        if (_timerCount == 0)
+        if (_timerCount <= 0)
         {
             Timer.Stop();
-            await GameOver();
+            _isTimerRunning = false;
+            await InvokeAsync(async () =>
+            {
+                await GameOver();
+                StateHasChanged();
+            });
             return;
         }
 
-        _timerCount -= 1;
+        _timerCount -= 1; // Mudado para decrementar 1 segundo por vez
         await InvokeAsync(StateHasChanged);
     }
 
-    #endregion
+    private string GetTimerPercentage()
+    {
+        if (_maxTime <= 0) return "0";
+        double percentage = (_timerCount / (double)_maxTime) * 100;
+        return Math.Max(0, percentage).ToString("0.##", CultureInfo.InvariantCulture);
+    }
 
+    private string GetTransitionDuration()
+    {
+        return _isTimerRunning ? "1.0" : "0.3";
+    }
+
+    private string GetTimerColor()
+    {
+        if (_maxTime <= 0) return "rgb(231, 76, 60)";
+
+        double percentage = (_timerCount / (double)_maxTime) * 100;
+
+        percentage = Math.Max(0, Math.Min(100, percentage));
+
+        int red, green, blue;
+
+        if (percentage > 50)
+        {
+            red = (int)(255 * (100 - percentage) / 50);
+            green = 255;
+            blue = 0;
+        }
+        else
+        {
+            red = 255;
+            green = (int)(255 * percentage / 50);
+            blue = 0;
+        }
+
+        return $"rgb({red}, {green}, {blue})";
+    }
+
+    #endregion
     #endregion
 }

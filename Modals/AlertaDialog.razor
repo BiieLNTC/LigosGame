@@ -1,0 +1,50 @@
+﻿@using LigosGame.Constants
+
+<MudDialog Class="configuracoes-dialog">
+        <TitleContent>
+            <div class="dialog-header">
+                <MudIcon Icon="@Icons.Material.Filled.Warning" Class="header-icon" />
+                <MudText Typo="Typo.h5" Class="header-title">@Titulo</MudText>
+            </div>
+        </TitleContent>
+    <DialogContent>
+            <div class="config-content">
+                @Mensagem
+            </div>
+    </DialogContent>
+    <DialogActions>
+            <div class="dialog-actions">
+                <MudButton Class="cancel-btn" Color="Color.Secondary" OnClick="Cancel" StartIcon="@Icons.Material.Filled.Close" Variant="Variant.Outlined">@NomeBtnCancelar</MudButton>
+                <MudButton Class="save-btn" Color="Color.Primary" OnClick="Confirmar" StartIcon="@Icons.Material.Filled.Check" Variant="Variant.Filled">@NomeBtnConfirmar</MudButton>
+            </div>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    #region Declaration
+
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public string Titulo { get; set; } = "Alerta";
+    [Parameter] public string Mensagem { get; set; }
+
+    [Parameter] public string NomeBtnConfirmar { get; set; } = "Confirmar";
+    [Parameter] public string NomeBtnCancelar { get; set; } = "Cancelar";
+
+    #endregion
+
+    #region Functions
+
+    private async Task Confirmar()
+    {
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    #endregion
+}

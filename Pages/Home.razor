@@ -10,12 +10,24 @@
 
 <PageTitle>Ligos</PageTitle>
 
-<div class="menu">
-    <h1>Ligos</h1>
+<div class="menu-container">
+    <div class="menu-content">
+        <div class="game-title">
+            <h1>Ligos Game</h1>
+            <div class="title-underline"></div>
+        </div>
 
-    <div class="column-buttons">
-        <button class="btn-default" @onclick="@IniciarJogo">JOGAR</button>
-        <button class="btn-default" @onclick="@ExibirConfiguracoes">OPÇÕES</button>
+        <div class="menu-buttons">
+            <button class="menu-btn primary" @onclick="@IniciarJogo">
+                <span class="btn-text">Jogar</span>
+                <div class="btn-ripple"></div>
+            </button>
+
+            <button class="menu-btn secondary" @onclick="@ExibirConfiguracoes">
+                <span class="btn-text">Opções</span>
+                <div class="btn-ripple"></div>
+            </button>
+        </div>
     </div>
 </div>
 

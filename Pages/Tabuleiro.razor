@@ -120,7 +120,7 @@ else
     private async Task GameOver()
     {
         _isTimerRunning = false;
-        await AbrirModalMensagem("Game Over", "O tempo acabou!");
+        await AbrirModalMensagem("Game Over", $"O tempo acabou! \nA pontuação foi de: {_listaLetrasSelecionadas.Count}/26");
     }
 
     private async Task OnCenterButtonClick()
@@ -192,6 +192,42 @@ else
 
     private void VoltarMenu() => _navegation.NavigateTo(UrlConstants.INDEX);
 
+    #region Timer
+
+    private void StartCount()
+    {
+        _timerCount = _configObj.ObterSegundosRodada();
+        _isTimerRunning = true;
+        Timer.Start();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void TimerConfig()
+    {
+        Timer = new System.Timers.Timer();
+        Timer.Elapsed += async (s, e) => await ElapsedEvent();
+        Timer.AutoReset = true;
+        Timer.Interval = 1000; // Mudado para 1 segundo para maior estabilidade
+    }
+
+    private async Task ElapsedEvent()
+    {
+        if (_timerCount <= 0)
+        {
+            Timer.Stop();
+            _isTimerRunning = false;
+            await InvokeAsync(async () =>
+            {
+                await GameOver();
+                StateHasChanged();
+            });
+            return;
+        }
+
+        _timerCount -= 1; // Mudado para decrementar 1 segundo por vez
+        await InvokeAsync(StateHasChanged);
+    }
+
     private string GetTimerPercentage()
     {
         if (_maxTime <= 0) return "0";
@@ -228,41 +264,6 @@ else
         }
 
         return $"rgb({red}, {green}, {blue})";
-    }
-
-    #region Timer
-    private void StartCount()
-    {
-        _timerCount = _configObj.ObterSegundosRodada();
-        _isTimerRunning = true;
-        Timer.Start();
-        InvokeAsync(StateHasChanged);
-    }
-
-    private void TimerConfig()
-    {
-        Timer = new System.Timers.Timer();
-        Timer.Elapsed += async (s, e) => await ElapsedEvent();
-        Timer.AutoReset = true;
-        Timer.Interval = 1000; // Mudado para 1 segundo para maior estabilidade
-    }
-
-    private async Task ElapsedEvent()
-    {
-        if (_timerCount <= 0)
-        {
-            Timer.Stop();
-            _isTimerRunning = false;
-            await InvokeAsync(async () =>
-            {
-                await GameOver();
-                StateHasChanged();
-            });
-            return;
-        }
-
-        _timerCount -= 1; // Mudado para decrementar 1 segundo por vez
-        await InvokeAsync(StateHasChanged);
     }
 
     #endregion

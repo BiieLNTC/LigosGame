@@ -15,7 +15,7 @@
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
     width: min(500px, 90vw) !important;
     max-height: 80vh !important;
-    background: white !important; /* Correção de fundo */
+    background: white !important;
     box-sizing: border-box;
 }
 
@@ -32,7 +32,6 @@
             background: transparent !important;
         }
 
-/* Cabeçalho corrigido */
 .dialog-header {
     display: flex;
     align-items: center;
@@ -194,7 +193,6 @@
     font-size: 14px !important;
 }
 
-/* Rodapé corrigido */
 .dialog-actions {
     display: flex;
     gap: 12px;

@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "LigosGame",
   "resources": {
-    "hash": "sha256-ffkVlppt0gxt8cMp2HW4p4EbQ1d5kSnkzG97FuuqAoQ=",
+    "hash": "sha256-E5UKhSTLaQVXCeFiRYj0cdxgapxBhxqHaW1yPdt2B4Q=",
     "jsModuleNative": {
       "dotnet.native.8.0.17.qnqnu9is6n.js": "sha256-YyxJV6dv935qHoQAmjB+2qRjHeGpm4SyWxE0T/KvsIE="
     },
@@ -18,7 +18,7 @@
     },
     "assembly": {
       "Blazored.LocalStorage.wasm": "sha256-OaMAAd5n7ORfyur5e3QIyEVKJ76MKIvwbg7/icnnYcU=",
-      "LigosGame.wasm": "sha256-ElbQBS6sb5zcfliM95+w2Q3lYbC/y3UYruITZYJgjRk=",
+      "LigosGame.wasm": "sha256-hij4vqIfcey4jxzQncOy9a6NZsPMR4+OUAEYvFrs+sM=",
       "Microsoft.AspNetCore.Components.Forms.wasm": "sha256-un0mWHcNYsRjdRZz/RwoEXZ36QV3diPGsr1753foDzQ=",
       "Microsoft.AspNetCore.Components.wasm": "sha256-agZuPMYhtC1dYxFysaIVrvuSGObYaEk9/eH36MC4WqM=",
       "Microsoft.AspNetCore.Components.Web.wasm": "sha256-vvl9++59dAh3JdC3DiQEB+Nv434EzkvxwiIkcahPJLs=",
